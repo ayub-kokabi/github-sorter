@@ -8,28 +8,16 @@
     <title>GitHub Sorter</title>
   </head>
 
-  <body>
-    <div>
-      <span style="font-size: 14px; font-weight: 600;">GitHub Sorter</span>
-      <span style="font-size: 11px; color: #666; margin-left: 4px;">active</span>
-    </div>
-    <p style="font-size: 12px; color: #555; margin: 6px 0 8px 0;">
-      Works without a token. The star badge appears on any page with GitHub repo links.
-    </p>
-    <details style="font-size: 12px; color: #555;">
-      <summary style="cursor: pointer; color: #4078c0;">Optional: GitHub token</summary>
-      <p style="margin: 4px 0;">
-        If shields.io can't resolve a repo, the token provides a fallback.
-        <a id="token-link" href="https://github.com/settings/tokens" target="_blank">Generate a token</a>.
-      </p>
-      <textarea placeholder="Optional: GitHub personal access token..." type="text" name="token-input" id="token-input"></textarea>
-      <span id="statusMessage" style="font-size: 11px;"></span>
-    </details>
+  <body>    
+    <a dir="rtl" id="token-link" href="https://github.com/settings/tokens" target="_blank">GitHub Token</a>
+    <textarea placeholder="Enter your github token here..." type="text" name="token-input" id="token-input"></textarea>
+    <span id="statusMessage"></span>
 
     <div id="donation">
-      <div>
+      <div>     
         <a id="reymit" href="https://reymit.ir/kokabi" target="_blank">
-          Make a Donation</a>
+          Make a Donation
+        </a>
       </div>
     </div>
 
