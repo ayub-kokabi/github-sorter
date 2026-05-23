@@ -8,20 +8,6 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 
     const { githubToken } = await chrome.storage.sync.get("githubToken");
 
-    if (!githubToken) {
-      await showAlertBadge();
-      return
-    }
-
-    const response = await fetch(`https://api.github.com/user`, {
-      headers: { Authorization: `Bearer ${githubToken}` },
-    });
-
-    if (response.status !== 200) {
-      await showAlertBadge();
-      return;
-    }
-
     await chrome.scripting.executeScript({
       target: { tabId: tabId, allFrames: true },
       func: inject,
@@ -29,13 +15,6 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     });
   }
 });
-
-
-async function showAlertBadge() {
-  await chrome.action.setBadgeText({ text: '!' });
-  await chrome.action.setBadgeTextColor({ color: 'white' });
-  await chrome.action.setBadgeBackgroundColor({ color: 'red' });
-}
 
 function getSelector(url) {
   const selectors = [
@@ -120,7 +99,7 @@ async function inject(selector, githubToken) {
   }
 
   async function injectStars(link) {
-    const stars = await getStars(link.href);    
+    const stars = await getStars(link.href);
     if (!stars) return;
 
     const strong = document.createElement("strong");
@@ -128,7 +107,7 @@ async function inject(selector, githubToken) {
     strong.setAttribute("stars", stars);
     strong.style.color = "#fff";
     strong.style.fontSize = "12px";
-    strong.innerText = `★ ${roundNumber(stars)}`;
+    strong.innerText = `\u2605 ${roundNumber(stars)}`;
     strong.style.backgroundColor = "#093812";
     strong.style.paddingRight = "5px";
     strong.style.paddingLeft = "5px";
@@ -147,14 +126,38 @@ async function inject(selector, githubToken) {
   async function getStars(githubRepoURL) {
     const repoName = githubRepoURL.match(/github\.com\/([^/]+\/[^/]+)/)[1];
 
-    const response = await fetch(`https://api.github.com/repos/${repoName}`, {
-      headers: { Authorization: `Token ${githubToken}` },
-    });
+    try {
+      const res = await fetch(`https://img.shields.io/github/stars/${repoName}.json`);
+      if (res.ok) {
+        const data = await res.json();
+        const stars = parseStars(data.message);
+        if (stars !== null) return stars;
+      }
+    } catch {}
 
-    const data = await response.json();
-    const stars = data.stargazers_count;
+    if (githubToken) {
+      try {
+        const res = await fetch(`https://api.github.com/repos/${repoName}`, {
+          headers: { Authorization: `Token ${githubToken}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          return data.stargazers_count;
+        }
+      } catch {}
+    }
 
-    return stars;
+    return null;
+  }
+
+  function parseStars(message) {
+    if (!message || message === "invalid" || message === "repo not found") return null;
+    let multiplier = 1;
+    let msg = message.trim();
+    if (msg.endsWith("M")) { multiplier = 1000000; msg = msg.slice(0, -1); }
+    else if (msg.endsWith("k")) { multiplier = 1000; msg = msg.slice(0, -1); }
+    const num = parseFloat(msg);
+    return isNaN(num) ? null : Math.round(num * multiplier);
   }
 
   function roundNumber(number) {
